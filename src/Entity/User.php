@@ -14,6 +14,11 @@ use App\Entity\Session;
 #[ORM\Table(name: '`user`')]
 class User
 {
+    public function __construct()
+    {
+        $this->createdAt = new \DateTime();
+    }
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

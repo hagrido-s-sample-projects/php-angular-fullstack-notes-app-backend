@@ -8,6 +8,11 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: SessionRepository::class)]
 class Session
 {
+    public function __construct()
+    {
+        $this->createdAt = new \DateTime();
+    }
+    
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
