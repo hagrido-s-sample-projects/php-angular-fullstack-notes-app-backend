@@ -5,6 +5,9 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\Collection;
+
+use App\Entity\Session;
 
 #[ApiResource]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -71,11 +74,17 @@ class User
         return $this->createdAt;
     }
 
+    #[ORM\OneToMany(targetEntity: Session::class, mappedBy: 'user')]
+    private Collection $sessions;
+
+    public function getSessions(): Collection
+    {
+        return $this->sessions;
+    }
+
     public function setCreatedAt(\DateTime $createdAt): self
     {
         $this->createdAt = $createdAt;
         return $this;
     }
-    
-
 }
