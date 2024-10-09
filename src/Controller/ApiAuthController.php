@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\Session;
+
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
@@ -61,7 +63,15 @@ class ApiAuthController extends AbstractController
         if ($password != $user->getPassword()) {
             return $this->json(['message' => 'Invalid credentials: \'' . $password . '\' , \'' . $user->getPassword() . '\''], Response::HTTP_UNAUTHORIZED);
         }
-        
+
+        $session = new Session();
+        $session->setUser(user: $user);
+        $session->setAccessToken(access: [$user->getPassword()]);
+        $session->setRefreshToken(refresh: $user->getPassword());
+
+        $this->entityManager->persist(object: $session);
+        $this->entityManager->flush();
+
         return $this->json(['message' => 'Login successful'], Response::HTTP_OK);
     }
 }

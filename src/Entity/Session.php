@@ -38,15 +38,15 @@ class Session
         return $this;
     }
 
-    #[ORM\Column(type: 'string', length: 255, nullable: false)]
-    private string $access;
+    #[ORM\Column(type: 'json', nullable: false)]
+    private array $access    = [];
 
-    public function getAccessToken(): ?string
+    public function getAccessToken(): array
     {
         return $this->access;
     }
 
-    public function setAccessToken(string $access): self
+    public function setAccessToken(array $access): self
     {
         $this->access = $access;
         return $this;
