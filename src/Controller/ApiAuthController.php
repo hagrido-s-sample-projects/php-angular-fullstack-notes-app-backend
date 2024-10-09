@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Entity\Session;
 
+use Symfony\Component\Uid\Uuid;
+
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
@@ -56,22 +58,21 @@ class ApiAuthController extends AbstractController
 
         $user = $this->entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
 
-        if (!$user) {
-            return $this->json(['message' => 'Invalid credentials user'], Response::HTTP_UNAUTHORIZED);
+        if (!$user || $password != $user->getPassword()) {
+            return $this->json(['message' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
         }
 
-        if ($password != $user->getPassword()) {
-            return $this->json(['message' => 'Invalid credentials: \'' . $password . '\' , \'' . $user->getPassword() . '\''], Response::HTTP_UNAUTHORIZED);
-        }
+        $accessToken = Uuid::v4()->toRfc4122();
+        $refreshToken = Uuid::v4()->toRfc4122();
 
         $session = new Session();
-        $session->setUser(user: $user);
-        $session->setAccessToken(access: [$user->getPassword()]);
-        $session->setRefreshToken(refresh: $user->getPassword());
+        $session->setUser($user);
+        $session->setAccessToken([$accessToken]);
+        $session->setRefreshToken($refreshToken);
 
-        $this->entityManager->persist(object: $session);
+        $this->entityManager->persist($session);
         $this->entityManager->flush();
 
-        return $this->json(['message' => 'Login successful'], Response::HTTP_OK);
+        return $this->json(['message' => 'Login successful', 'token' => $accessToken], Response::HTTP_OK);
     }
 }
