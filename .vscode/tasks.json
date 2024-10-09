@@ -1,0 +1,34 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Make Migration",
+      "type": "shell",
+      "command": "php",
+      "args": [
+        "bin/console",
+        "doctrine:migrations:diff"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Apply Migration",
+      "type": "shell",
+      "command": "php",
+      "args": [
+        "bin/console",
+        "doctrine:migrations:migrate",
+        "--no-interaction"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": []
+    }
+  ]
+}
