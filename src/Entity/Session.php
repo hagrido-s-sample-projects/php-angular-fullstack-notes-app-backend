@@ -10,6 +10,7 @@ class Session
 {
     public function __construct()
     {
+        $this->isRevoked = false;
         $this->createdAt = new \DateTime();
     }
     
@@ -63,6 +64,20 @@ class Session
     public function setRefreshToken(string $refresh): self
     {
         $this->refresh = $refresh;
+        return $this;
+    }
+
+    #[ORM\Column(type: 'boolean', nullable: false)]
+    private bool $isRevoked = false;
+
+    public function isRevoked(): bool
+    {
+        return $this->isRevoked;
+    }
+
+    public function revoke(): self
+    {
+        $this->isRevoked = true;
         return $this;
     }
 
