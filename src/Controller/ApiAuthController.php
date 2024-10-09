@@ -40,4 +40,28 @@ class ApiAuthController extends AbstractController
 
         return $this->json(['message' => 'User registered successfully'], Response::HTTP_CREATED);
     }
+
+    #[Route('/api/auth/login', name: 'app_api_auth_login', methods: ['POST'])]
+    public function login(Request $request): Response
+    {
+        $data = json_decode($request->getContent(), true);
+        $username = $data['username'] ?? null;
+        $password = $data['password'] ?? null;
+
+        if (!$username || !$password) {
+            return $this->json(['message' => 'Missing body parameters'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $user = $this->entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
+
+        if (!$user) {
+            return $this->json(['message' => 'Invalid credentials user'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if ($password != $user->getPassword()) {
+            return $this->json(['message' => 'Invalid credentials: \'' . $password . '\' , \'' . $user->getPassword() . '\''], Response::HTTP_UNAUTHORIZED);
+        }
+        
+        return $this->json(['message' => 'Login successful'], Response::HTTP_OK);
+    }
 }
