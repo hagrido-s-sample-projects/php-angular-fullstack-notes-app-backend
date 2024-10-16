@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class ApiAuthController extends AbstractController
 {
@@ -22,9 +23,18 @@ class ApiAuthController extends AbstractController
         $this->entityManager = $entityManager;
     }
 
-    #[Route('/api/auth/register', name: 'app_api_auth', methods: ['POST'])]
-    public function index(Request $request): Response
+    #[Route('/api/auth/register', name: 'app_api_auth_register', methods: ['POST', 'OPTIONS'])]
+    public function register(Request $request): Response
     {
+        if ($request->isMethod('OPTIONS')) {
+            return new Response('', 200, [
+                'Access-Control-Allow-Origin' => '*',
+                'Access-Control-Allow-Methods' => 'POST, OPTIONS',
+                'Access-Control-Allow-Headers' => 'Content-Type, Authorization',
+                'Access-Control-Max-Age' => '3600'
+            ]);
+        }
+
         $data = json_decode($request->getContent(), true);
         $username = $data['username'] ?? null;
         $email = $data['email'] ?? null;
