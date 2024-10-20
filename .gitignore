@@ -24,7 +24,7 @@
 /assets/vendor/
 ###< symfony/asset-mapper ###
 
-###> vscode ###
-.vscode/
-!.vscode/tasks.json
+###> .vscode ###
+/.vscode/*
+!/.vscode/tasks.json
 ###< vscode ###

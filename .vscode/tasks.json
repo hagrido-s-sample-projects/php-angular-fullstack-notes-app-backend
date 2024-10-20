@@ -1,0 +1,58 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Docker Compose Up",
+            "type": "shell",
+            "command": "docker-compose up -d",
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Symfony App",
+            "type": "shell",
+            "command": "symfony serve",
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Symfony App (without TLS)",
+            "type": "shell",
+            "command": "symfony serve --no-tls",
+            "problemMatcher": []
+        },
+        {
+            "label": "Clear Symfony Cache",
+            "type": "shell",
+            "command": "php bin/console cache:clear",
+            "problemMatcher": []
+        },
+        {
+            "label": "Create Migration",
+            "type": "shell",
+            "command": "php bin/console make:migration",
+            "problemMatcher": []
+        },
+        {
+            "label": "Apply Migration",
+            "type": "shell",
+            "command": "php bin/console doctrine:migrations:migrate",
+            "problemMatcher": []
+        },
+        {
+            "label": "Check Schema",
+            "type": "shell",
+            "command": "php bin/console doctrine:schema:validate",
+            "problemMatcher": []
+        }
+        ,
+        {
+            "label": "Start Dev Server",
+            "type": "shell",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Docker Compose Up",
+                "Run Symfony App (without TLS)"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}
