@@ -53,7 +53,7 @@ class Session
         return $this->tokens;
     }
 
-    public function addToken(Token $token): self
+    private function addToken(Token $token): self
     {
         if (!$this->tokens->contains($token)) {
             $this->tokens[] = $token;
