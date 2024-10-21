@@ -62,14 +62,14 @@ class Session
 
     public function generateAccessToken(): Token
     {
-        $token = new Token(\Symfony\Component\Uid\Uuid::v4()->toRfc4122(), TokenType::ACCESS);
+        $token = new Token(\Symfony\Component\Uid\Uuid::v4()->toRfc4122(), TokenType::ACCESS, $this);
         $this->addToken($token);
         return $token;
     }
 
     public function generateRefreshToken(): Token
     {
-        $token = new Token(\Symfony\Component\Uid\Uuid::v4()->toRfc4122(), TokenType::REFRESH);
+        $token = new Token(\Symfony\Component\Uid\Uuid::v4()->toRfc4122(), TokenType::REFRESH, $this);
         $this->addToken($token);
         return $token;
     }
