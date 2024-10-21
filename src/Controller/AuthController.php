@@ -37,6 +37,20 @@ class AuthController extends AbstractController
         try {
             $data = json_decode($request->getContent(), true);
 
+            if (empty($data['username']) || empty($data['email']) || empty($data['password'])) {
+                return new JsonResponse(['error' => 'Missing required fields', 'status' => 'EMPTY_FIELDS'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $existingUser = $this->entityManager->getRepository(User::class)->findOneBy(['username' => $data['username']]);
+            if ($existingUser) {
+                return new JsonResponse(['error' => 'Username already exists', 'status' => 'USERNAME_EXISTS'], Response::HTTP_CONFLICT);
+            }
+
+            $existingEmail = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
+            if ($existingEmail) {
+                return new JsonResponse(['error' => 'Email already exists', 'status' => 'EMAIL_EXISTS'], Response::HTTP_CONFLICT);
+            }
+
             $user = new User();
             $user->setUsername($data['username'] ?? '');
             $user->setEmail($data['email'] ?? '');
@@ -53,7 +67,7 @@ class AuthController extends AbstractController
             $this->entityManager->persist($user);
             $this->entityManager->flush();
 
-            return new JsonResponse(['message' => 'User registered successfully'], Response::HTTP_CREATED);
+            return new JsonResponse(['message' => 'User registered successfully', 'status' => 'SUCCESS'], Response::HTTP_CREATED);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage(), 'status' => 'INTERNAL_ERROR'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
