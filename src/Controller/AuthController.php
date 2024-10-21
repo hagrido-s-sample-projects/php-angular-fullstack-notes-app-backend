@@ -99,8 +99,9 @@ class AuthController extends AbstractController
             $this->entityManager->flush();
 
             return $this->json([
+                'status' => 'SUCCESS',
                 'message' => 'Login successful',
-                'token' => $accessToken,
+                'access_token' => $accessToken,
                 'refresh_token' => $refreshToken
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
