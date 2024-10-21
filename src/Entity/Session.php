@@ -4,6 +4,10 @@ namespace App\Entity;
 
 use App\Repository\SessionRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use App\Entity\Token;
+use App\Enum\TokenType;
 
 #[ORM\Entity(repositoryClass: SessionRepository::class)]
 class Session
@@ -12,6 +16,7 @@ class Session
     {
         $this->isRevoked = false;
         $this->createdAt = new \DateTime();
+        $this->tokens = new ArrayCollection();
     }
     
     #[ORM\Id]
@@ -39,32 +44,34 @@ class Session
         return $this;
     }
 
-    #[ORM\Column(type: 'json', nullable: false)]
-    private array $access    = [];
+    #[ORM\OneToMany(mappedBy: 'session', targetEntity: Token::class, cascade: ['persist'])]
+    private Collection $tokens;
 
-    public function getAccessToken(): array
+    public function getTokens(): Collection
     {
-        return $this->access;
+        return $this->tokens;
     }
 
-    public function setAccessToken(array $access): self
+    public function addToken(Token $token): self
     {
-        $this->access = $access;
+        if (!$this->tokens->contains($token)) {
+            $this->tokens[] = $token;
+        }
         return $this;
     }
 
-    #[ORM\Column(type: 'string', length: 255, nullable: false)]
-    private string $refresh;
-
-    public function getRefreshToken(): ?string
+    public function generateAccessToken(): Token
     {
-        return $this->refresh;
+        $token = new Token(\Symfony\Component\Uid\Uuid::v4()->toRfc4122(), TokenType::ACCESS);
+        $this->addToken($token);
+        return $token;
     }
 
-    public function setRefreshToken(string $refresh): self
+    public function generateRefreshToken(): Token
     {
-        $this->refresh = $refresh;
-        return $this;
+        $token = new Token(\Symfony\Component\Uid\Uuid::v4()->toRfc4122(), TokenType::REFRESH);
+        $this->addToken($token);
+        return $token;
     }
 
     #[ORM\Column(type: 'boolean', nullable: false)]
@@ -78,6 +85,9 @@ class Session
     public function revoke(): self
     {
         $this->isRevoked = true;
+        foreach ($this->tokens as $token) {
+            $token->revoke();
+        }
         return $this;
     }
 
