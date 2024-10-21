@@ -61,11 +61,13 @@ class Session
         return $this;
     }
 
-    public function generateAccessToken(string $refreshTokenValue): Token
+    public function generateAccessToken(Token $refreshToken): Token
     {
         $this->revokeTokensByType(TokenType::ACCESS);
         
-        $tokenValue = $refreshTokenValue . '.' . Uuid::v4()->toRfc4122();
+        $refreshTokenId = substr(hash('sha256', $refreshToken->getToken()), 0, 8);
+        $accessTokenValue = hash('sha256', Uuid::v4()->toRfc4122());
+        $tokenValue = $refreshTokenId . '.' . $accessTokenValue;
         $token = new Token($tokenValue, TokenType::ACCESS, $this);
         $this->addToken($token);
         return $token;
@@ -76,12 +78,11 @@ class Session
         $this->revokeTokensByType(TokenType::REFRESH);
         $this->revokeTokensByType(TokenType::ACCESS);
         
-        $refreshTokenBase = Uuid::v4()->toRfc4122();
-        $hashedRefreshToken = hash('sha256', $refreshTokenBase);
-        $refreshToken = new Token($hashedRefreshToken, TokenType::REFRESH, $this);
+        $refreshTokenValue = hash('sha256', Uuid::v4()->toRfc4122());
+        $refreshToken = new Token($refreshTokenValue, TokenType::REFRESH, $this);
         $this->addToken($refreshToken);
         
-        $accessToken = $this->generateAccessToken($refreshTokenBase);
+        $accessToken = $this->generateAccessToken($refreshToken);
         
         return ['refresh_token' => $refreshToken, 'access_token' => $accessToken];
     }
