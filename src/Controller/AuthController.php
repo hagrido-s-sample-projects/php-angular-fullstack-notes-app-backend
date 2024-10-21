@@ -91,8 +91,7 @@ class AuthController extends AbstractController
             $session = new Session();
             $session->setUser($user);
 
-            $accessToken = $session->generateAccessToken();
-            $refreshToken = $session->generateRefreshToken();
+            $tokens = $session->regenerateTokens();
 
             $this->entityManager->persist($session);
             $this->entityManager->flush();
@@ -100,8 +99,8 @@ class AuthController extends AbstractController
             return $this->json([
                 'status' => 'SUCCESS',
                 'message' => 'Login successful',
-                'access_token' => $accessToken->getToken(),
-                'refresh_token' => $refreshToken->getToken()
+                'access_token' => $tokens['access_token']->getToken(),
+                'refresh_token' => $tokens['refresh_token']->getToken()
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse(['status' => 'INTERNAL_ERROR', 'error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
