@@ -34,55 +34,63 @@ class AuthController extends AbstractController
     #[Route('/register', name: 'app_auth_register', methods: ['POST'])]
     public function register(Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
+        try {
+            $data = json_decode($request->getContent(), true);
 
-        $user = new User();
-        $user->setUsername($data['username'] ?? '');
-        $user->setEmail($data['email'] ?? '');
-        $user->setPassword($data['password'] ?? '');
+            $user = new User();
+            $user->setUsername($data['username'] ?? '');
+            $user->setEmail($data['email'] ?? '');
+            $user->setPassword($data['password'] ?? '');
 
-        $errors = $this->validator->validate($user);
-        if (count($errors) > 0) {
-            return $this->json(['errors' => (string) $errors], Response::HTTP_BAD_REQUEST);
+            $errors = $this->validator->validate($user);
+            if (count($errors) > 0) {
+                return new JsonResponse(['errors' => (string) $errors], Response::HTTP_BAD_REQUEST);
+            }
+
+            $hashedPassword = $this->passwordHasher->hashPassword($user, $user->getPassword());
+            $user->setPassword($hashedPassword);
+
+            $this->entityManager->persist($user);
+            $this->entityManager->flush();
+
+            return new JsonResponse(['message' => 'User registered successfully'], Response::HTTP_CREATED);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage(), 'status' => 'INTERNAL_ERROR'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $hashedPassword = $this->passwordHasher->hashPassword($user, $user->getPassword());
-        $user->setPassword($hashedPassword);
-
-        $this->entityManager->persist($user);
-        $this->entityManager->flush();
-
-        return $this->json(['message' => 'User registered successfully'], Response::HTTP_CREATED);
     }
 
     #[Route('/login', name: 'app_auth_login', methods: ['POST'])]
     public function login(Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        $username = $data['username'] ?? '';
-        $password = $data['password'] ?? '';
+        try {
+            $data = json_decode($request->getContent(), true);
+            $username = $data['username'] ?? '';
+            $password = $data['password'] ?? '';
 
-        $user = $this->entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
+            $user = $this->entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
 
-        if (!$user || !$this->passwordHasher->isPasswordValid($user, $password)) {
-            return $this->json(['message' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
+            if (!$user || !$this->passwordHasher->isPasswordValid($user, $password)) {
+                return $this->json(['message' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
+            }
+
+            $accessToken = Uuid::v4()->toRfc4122();
+            $refreshToken = Uuid::v4()->toRfc4122();
+
+            $session = new Session();
+            $session->setUser($user);
+            $session->setAccessToken([$accessToken]);
+            $session->setRefreshToken($refreshToken);
+
+            $this->entityManager->persist($session);
+            $this->entityManager->flush();
+
+            return $this->json([
+                'message' => 'Login successful',
+                'token' => $accessToken,
+                'refresh_token' => $refreshToken
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage(), 'status' => 'INTERNAL_ERROR'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $accessToken = Uuid::v4()->toRfc4122();
-        $refreshToken = Uuid::v4()->toRfc4122();
-
-        $session = new Session();
-        $session->setUser($user);
-        $session->setAccessToken([$accessToken]);
-        $session->setRefreshToken($refreshToken);
-
-        $this->entityManager->persist($session);
-        $this->entityManager->flush();
-
-        return $this->json([
-            'message' => 'Login successful',
-            'token' => $accessToken,
-            'refresh_token' => $refreshToken
-        ], Response::HTTP_OK);
     }
 }
