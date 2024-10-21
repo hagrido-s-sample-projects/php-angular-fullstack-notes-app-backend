@@ -3,13 +3,15 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use App\Enum\NoteState;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 use App\Entity\Session;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use App\Entity\Note;
 
 #[ApiResource]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -20,6 +22,7 @@ class User implements PasswordAuthenticatedUserInterface
     {
         $this->createdAt = new \DateTime();
         $this->sessions = new ArrayCollection();
+        $this->notes = new ArrayCollection();
     }
 
     #[ORM\Id]
@@ -115,6 +118,38 @@ class User implements PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($session->getUser() === $this) {
                 $session->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    #[ORM\OneToMany(mappedBy: 'owner', targetEntity: Note::class)]
+    private Collection $notes;
+
+    /**
+     * @return Collection<int, Note>
+     */
+    public function getNotes(): Collection
+    {
+        return $this->notes;
+    }
+
+    public function addNote(Note $note): self
+    {
+        if (!$this->notes->contains($note)) {
+            $this->notes->add($note);
+            $note->setOwner($this);
+        }
+
+        return $this;
+    }
+
+    public function removeNote(Note $note): self
+    {
+        if ($this->notes->removeElement($note)) {
+            if ($note->getOwner() === $this) {
+                $note->setState(NoteState::TRASHED);
             }
         }
 
