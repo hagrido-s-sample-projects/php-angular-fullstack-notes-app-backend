@@ -13,6 +13,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Entity\Token;
+use App\Enum\TokenType;
 
 #[Route('/api/auth')]
 class AuthController extends AbstractController
@@ -72,7 +74,6 @@ class AuthController extends AbstractController
             return new JsonResponse(['status' => 'INTERNAL_ERROR', 'error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
-
     #[Route('/login', name: 'app_auth_login', methods: ['POST'])]
     public function login(Request $request): JsonResponse
     {
@@ -87,13 +88,11 @@ class AuthController extends AbstractController
                 return new JsonResponse(['status' => 'INVALID_CREDENTIALS', 'error' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
             }
 
-            $accessToken = Uuid::v4()->toRfc4122();
-            $refreshToken = Uuid::v4()->toRfc4122();
-
             $session = new Session();
             $session->setUser($user);
-            $session->setAccessToken([$accessToken]);
-            $session->setRefreshToken($refreshToken);
+
+            $accessToken = $session->generateAccessToken();
+            $refreshToken = $session->generateRefreshToken();
 
             $this->entityManager->persist($session);
             $this->entityManager->flush();
@@ -101,8 +100,8 @@ class AuthController extends AbstractController
             return $this->json([
                 'status' => 'SUCCESS',
                 'message' => 'Login successful',
-                'access_token' => $accessToken,
-                'refresh_token' => $refreshToken
+                'access_token' => $accessToken->getToken(),
+                'refresh_token' => $refreshToken->getToken()
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             return new JsonResponse(['status' => 'INTERNAL_ERROR', 'error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
