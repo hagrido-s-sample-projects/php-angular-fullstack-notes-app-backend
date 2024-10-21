@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use App\Entity\Token;
 use App\Enum\TokenType;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: SessionRepository::class)]
 class Session
@@ -60,18 +61,38 @@ class Session
         return $this;
     }
 
-    public function generateAccessToken(): Token
+    public function generateAccessToken(string $refreshTokenValue): Token
     {
-        $token = new Token(\Symfony\Component\Uid\Uuid::v4()->toRfc4122(), TokenType::ACCESS, $this);
+        $this->revokeTokensByType(TokenType::ACCESS);
+        
+        $tokenValue = $refreshTokenValue . '.' . Uuid::v4()->toRfc4122();
+        $token = new Token($tokenValue, TokenType::ACCESS, $this);
         $this->addToken($token);
         return $token;
     }
 
-    public function generateRefreshToken(): Token
+    public function regenerateTokens(): array
     {
-        $token = new Token(\Symfony\Component\Uid\Uuid::v4()->toRfc4122(), TokenType::REFRESH, $this);
-        $this->addToken($token);
-        return $token;
+        $this->revokeTokensByType(TokenType::REFRESH);
+        $this->revokeTokensByType(TokenType::ACCESS);
+        
+        $refreshTokenBase = Uuid::v4()->toRfc4122();
+        $hashedRefreshToken = hash('sha256', $refreshTokenBase);
+        $refreshToken = new Token($hashedRefreshToken, TokenType::REFRESH, $this);
+        $this->addToken($refreshToken);
+        
+        $accessToken = $this->generateAccessToken($refreshTokenBase);
+        
+        return ['refresh_token' => $refreshToken, 'access_token' => $accessToken];
+    }
+
+    private function revokeTokensByType(TokenType $type): void
+    {
+        foreach ($this->tokens as $token) {
+            if ($token->getType() === $type) {
+                $token->revoke();
+            }
+        }
     }
 
     #[ORM\Column(type: 'boolean', nullable: false)]
