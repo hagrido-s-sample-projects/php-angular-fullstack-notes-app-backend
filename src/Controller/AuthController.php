@@ -38,17 +38,17 @@ class AuthController extends AbstractController
             $data = json_decode($request->getContent(), true);
 
             if (empty($data['username']) || empty($data['email']) || empty($data['password'])) {
-                return new JsonResponse(['error' => 'Missing required fields', 'status' => 'EMPTY_FIELDS'], Response::HTTP_BAD_REQUEST);
+                return new JsonResponse(['status' => 'EMPTY_FIELDS', 'error' => 'Missing required fields'], Response::HTTP_BAD_REQUEST);
             }
 
             $existingUser = $this->entityManager->getRepository(User::class)->findOneBy(['username' => $data['username']]);
             if ($existingUser) {
-                return new JsonResponse(['error' => 'Username already exists', 'status' => 'USERNAME_EXISTS'], Response::HTTP_CONFLICT);
+                return new JsonResponse(['status' => 'USERNAME_EXISTS', 'error' => 'Username already exists'], Response::HTTP_CONFLICT);
             }
 
             $existingEmail = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $data['email']]);
             if ($existingEmail) {
-                return new JsonResponse(['error' => 'Email already exists', 'status' => 'EMAIL_EXISTS'], Response::HTTP_CONFLICT);
+                return new JsonResponse(['status' => 'EMAIL_EXISTS', 'error' => 'Email already exists'], Response::HTTP_CONFLICT);
             }
 
             $user = new User();
@@ -58,7 +58,7 @@ class AuthController extends AbstractController
 
             $errors = $this->validator->validate($user);
             if (count($errors) > 0) {
-                return new JsonResponse(['errors' => (string) $errors], Response::HTTP_BAD_REQUEST);
+                return new JsonResponse(['status' => 'VALIDATION_ERROR', 'errors' => (string) $errors], Response::HTTP_BAD_REQUEST);
             }
 
             $hashedPassword = $this->passwordHasher->hashPassword($user, $user->getPassword());
@@ -67,9 +67,9 @@ class AuthController extends AbstractController
             $this->entityManager->persist($user);
             $this->entityManager->flush();
 
-            return new JsonResponse(['message' => 'User registered successfully', 'status' => 'SUCCESS'], Response::HTTP_CREATED);
+            return new JsonResponse(['status' => 'SUCCESS', 'message' => 'User registered successfully'], Response::HTTP_CREATED);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage(), 'status' => 'INTERNAL_ERROR'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['status' => 'INTERNAL_ERROR', 'error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -84,7 +84,7 @@ class AuthController extends AbstractController
             $user = $this->entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
 
             if (!$user || !$this->passwordHasher->isPasswordValid($user, $password)) {
-                return $this->json(['message' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
+                return new JsonResponse(['status' => 'INVALID_CREDENTIALS', 'error' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
             }
 
             $accessToken = Uuid::v4()->toRfc4122();
@@ -105,7 +105,7 @@ class AuthController extends AbstractController
                 'refresh_token' => $refreshToken
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage(), 'status' => 'INTERNAL_ERROR'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['status' => 'INTERNAL_ERROR', 'error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }
