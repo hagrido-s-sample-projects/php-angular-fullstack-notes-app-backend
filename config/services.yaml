@@ -27,4 +27,6 @@ services:
         tags:
             - { name: kernel.event_listener, event: kernel.exception }
 
+    App\Middlewares\VerifyUserTokenMiddleware:
         tags:
+            - { name: kernel.event_subscriber }
