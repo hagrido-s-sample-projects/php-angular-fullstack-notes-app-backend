@@ -3,11 +3,15 @@
 namespace App\Middlewares;
 
 use App\Attribute\PublicRoute;
+
+use App\Entity\Token;
+
+
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\KernelInterface;
 
@@ -95,7 +99,19 @@ class VerifyUserTokenMiddleware implements EventSubscriberInterface
             return new JsonResponse(['status' => 'INVALID_TOKEN', 'error' => 'Invalid token format'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // If everything is okay, return null to allow the request to continue
+        $entityManager = $this->kernel->getContainer()->get('doctrine')->getManager();
+        $tokenEntity = $entityManager->getRepository(Token::class)->findOneBy(['token' => $token]);
+
+        if (!$tokenEntity) {
+            return new JsonResponse(['status' => 'INVALID_TOKEN', 'error' => 'Invalid token'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if ($tokenEntity->getCreatedAt() < new \DateTime('-7 days')) {
+            return new JsonResponse(['status' => 'EXPIRED_TOKEN', 'error' => 'Token has expired'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $request->attributes->set('user', $tokenEntity->getSession()->getUser()->getId());
+
         return null;
     }
 }
