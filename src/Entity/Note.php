@@ -32,12 +32,20 @@ class Note
     #[ORM\Column(type: 'string', enumType: NoteState::class)]
     private NoteState $state = NoteState::NORMAL;
 
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $createdAt;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $updatedAt;
+
     public function __construct(User $owner, string $title = null, string $content = null)
     {
         $this->owner = $owner;
         $this->title = $title;
         $this->content = $content;
         $this->state = NoteState::NORMAL;
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
     }
 
     public function getId(): ?int
@@ -53,6 +61,7 @@ class Note
     public function setTitle(?string $title): self
     {
         $this->title = $title;
+        $this->setUpdatedAt();
         return $this;
     }
 
@@ -64,6 +73,7 @@ class Note
     public function setContent(?string $content): self
     {
         $this->content = $content;
+        $this->setUpdatedAt();
         return $this;
     }
 
@@ -75,6 +85,7 @@ class Note
     public function setOwner(User $owner): self
     {
         $this->owner = $owner;
+        $this->setUpdatedAt();
         return $this;
     }
 
@@ -86,7 +97,23 @@ class Note
     public function setState(NoteState $state): self
     {
         $this->state = $state;
+        $this->setUpdatedAt();
         return $this;
+    }
+
+    public function getCreatedAt(): \DateTimeInterface
+    {
+        return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): \DateTimeInterface
+    {
+        return $this->updatedAt;
+    }
+
+    private function setUpdatedAt(): void
+    {
+        $this->updatedAt = new \DateTime();
     }
 
     public function trashNote(): JsonResponse
@@ -95,6 +122,7 @@ class Note
             return new JsonResponse(['status' => 'ALREADY_TRASHED', 'error' => 'Note is already in trash'], Response::HTTP_BAD_REQUEST);
         }
         $this->state = NoteState::TRASHED;
+        $this->setUpdatedAt();
         return new JsonResponse(['status' => 'SUCCESS', 'message' => 'Note trashed successfully'], Response::HTTP_OK);
     }
 
@@ -104,6 +132,7 @@ class Note
             return new JsonResponse(['status' => 'ALREADY_ARCHIVED', 'error' => 'Note is already archived'], Response::HTTP_BAD_REQUEST);
         }
         $this->state = NoteState::ARCHIVED;
+        $this->setUpdatedAt();
         return new JsonResponse(['status' => 'SUCCESS', 'message' => 'Note archived successfully'], Response::HTTP_OK);
     }
 
@@ -113,6 +142,18 @@ class Note
             return new JsonResponse(['status' => 'ALREADY_NORMAL', 'error' => 'Note is already in normal state'], Response::HTTP_BAD_REQUEST);
         }
         $this->state = NoteState::NORMAL;
+        $this->setUpdatedAt();
         return new JsonResponse(['status' => 'SUCCESS', 'message' => 'Note restored successfully'], Response::HTTP_OK);
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'title' => $this->getTitle(),
+            'content' => $this->getContent(),
+            'createdAt' => $this->getCreatedAt()->format('Y-m-d H:i:s'),
+            'updatedAt' => $this->getUpdatedAt()->format('Y-m-d H:i:s'),
+        ];
     }
 }
