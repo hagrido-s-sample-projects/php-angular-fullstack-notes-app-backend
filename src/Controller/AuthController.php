@@ -15,6 +15,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Entity\Token;
 use App\Enum\TokenType;
+use App\Attribute\PublicRoute;
 
 #[Route('/api/auth')]
 class AuthController extends AbstractController
@@ -75,6 +76,7 @@ class AuthController extends AbstractController
         }
     }
     #[Route('/login', name: 'app_auth_login', methods: ['POST'])]
+    #[PublicRoute]
     public function login(Request $request): JsonResponse
     {
         try {

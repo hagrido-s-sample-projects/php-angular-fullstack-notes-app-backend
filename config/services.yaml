@@ -28,5 +28,8 @@ services:
             - { name: kernel.event_listener, event: kernel.exception }
 
     App\Middlewares\VerifyUserTokenMiddleware:
+        arguments:
+            $requestStack: '@request_stack'
+            $kernel: '@kernel'
         tags:
             - { name: kernel.event_subscriber }
