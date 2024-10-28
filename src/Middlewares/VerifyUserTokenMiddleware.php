@@ -110,6 +110,10 @@ class VerifyUserTokenMiddleware implements EventSubscriberInterface
             return new JsonResponse(['status' => 'EXPIRED_TOKEN', 'error' => 'Token has expired'], Response::HTTP_UNAUTHORIZED);
         }
 
+        if ($tokenEntity->getSession()->isRevoked()) {
+            return new JsonResponse(['status' => 'SESSION_REVOKED', 'error' => 'Session already revoked'], Response::HTTP_UNAUTHORIZED);
+        }
+
         $request->attributes->set('user_id', $tokenEntity->getSession()->getUser()->getId());
         $request->attributes->set('session_id', $tokenEntity->getSession()->getId());
 
