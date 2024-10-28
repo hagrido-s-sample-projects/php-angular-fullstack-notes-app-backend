@@ -116,7 +116,7 @@ class VerifyUserTokenMiddleware implements EventSubscriberInterface
 
         $request->attributes->set('user_id', $tokenEntity->getSession()->getUser()->getId());
         $request->attributes->set('session_id', $tokenEntity->getSession()->getId());
-
+        $request->attributes->set('token', $token);
         return null;
     }
 }

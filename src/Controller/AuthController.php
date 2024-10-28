@@ -134,4 +134,29 @@ class AuthController extends AbstractController
 
         return new JsonResponse(['status' => 'SUCCESS', 'message' => 'Logout successful'], Response::HTTP_OK);
     }
+
+    #[Route('/validate', name: 'app_auth_validate', methods: ['POST'])]
+    public function validateToken(Request $request): JsonResponse
+    {
+        $accessToken = $request->attributes->get('token');
+
+        if (!$accessToken) {
+            return new JsonResponse(['status' => 'ACCESS_TOKEN_NOT_FOUND', 'error' => 'Access token not found'], Response::HTTP_BAD_REQUEST);
+        }
+
+
+        $token = $this->entityManager->getRepository(Token::class)->findOneBy(['token' => $accessToken]);
+
+        if (!$token) {
+            return new JsonResponse(['status' => 'INVALID_TOKEN', 'error' => 'Invalid token'], Response::HTTP_UNAUTHORIZED);
+        } else if ($token->getType() !== TokenType::ACCESS) {
+            return new JsonResponse(['status' => 'INVALID_TOKEN_TYPE', 'error' => 'Invalid token type'], Response::HTTP_UNAUTHORIZED);
+        } else if ($token->getCreatedAt() < new \DateTime('-7 days')) {
+            return new JsonResponse(['status' => 'TOKEN_EXPIRED', 'error' => 'Token expired'], Response::HTTP_UNAUTHORIZED);
+        } else if ($token->getSession()->isRevoked()) {
+            return new JsonResponse(['status' => 'SESSION_REVOKED', 'error' => 'Session revoked'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        return new JsonResponse(['status' => 'SUCCESS', 'message' => 'Token validated'], Response::HTTP_OK);
+    }
 }
