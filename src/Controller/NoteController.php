@@ -57,7 +57,6 @@ class NoteController extends AbstractController
     }
 
     #[Route('', name: 'app_note_get', methods: ['GET'])]
-    #[TokenVerification]
     public function getNotes(Request $request): JsonResponse
     {
         $userId = $request->attributes->get('user');
