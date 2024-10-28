@@ -113,13 +113,24 @@ class AuthController extends AbstractController
     #[Route('/logout', name: 'app_auth_logout', methods: ['POST'])]
     public function logout(Request $request): JsonResponse
     {
-        $userId = $request->attributes->get('user_id');
+        $sessionId = $request->attributes->get('session_id');
 
-        if (!$userId) {
-            return new JsonResponse(['status' => 'USER_ID_NOT_FOUND', 'error' => 'User ID not found'], Response::HTTP_BAD_REQUEST);
+        if (!$sessionId) {
+            return new JsonResponse(['status' => 'SESSION_ID_NOT_FOUND', 'error' => 'Session ID not found'], Response::HTTP_BAD_REQUEST);
         }
 
-        $user = $this->entityManager->getRepository(User::class)->find($userId);
+        $session = $this->entityManager->getRepository(Session::class)->find($sessionId);
+
+        if (!$session) {
+            return new JsonResponse(['status' => 'SESSION_NOT_FOUND', 'error' => 'Session not found'], Response::HTTP_NOT_FOUND);
+        } else if ($session->isRevoked()) {
+            return new JsonResponse(['status' => 'SESSION_REVOKED', 'error' => 'Session already revoked'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $session->revoke();
+
+        $this->entityManager->persist($session);
+        $this->entityManager->flush();
 
         return new JsonResponse(['status' => 'SUCCESS', 'message' => 'Logout successful'], Response::HTTP_OK);
     }
