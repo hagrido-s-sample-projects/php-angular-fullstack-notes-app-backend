@@ -111,7 +111,7 @@ class VerifyUserTokenMiddleware implements EventSubscriberInterface
         }
 
         if ($tokenEntity->getSession()->isRevoked()) {
-            return new JsonResponse(['status' => 'SESSION_REVOKED', 'error' => 'Session already revoked'], Response::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['status' => 'SESSION_REVOKED', 'error' => 'This session has been revoked'], Response::HTTP_UNAUTHORIZED);
         }
 
         $request->attributes->set('user_id', $tokenEntity->getSession()->getUser()->getId());
