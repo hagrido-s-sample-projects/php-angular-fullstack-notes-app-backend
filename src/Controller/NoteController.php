@@ -27,7 +27,7 @@ class NoteController extends AbstractController
     #[Route('', name: 'app_note_create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
-        $userId = $request->attributes->get('user');
+        $userId = $request->attributes->get('user_id');
 
         if (!$userId) {
             return new JsonResponse(['status' => 'USER_ID_NOT_FOUND', 'error' => 'User ID not found'], Response::HTTP_BAD_REQUEST);
@@ -59,7 +59,7 @@ class NoteController extends AbstractController
     #[Route('', name: 'app_note_get', methods: ['GET'])]
     public function getNotes(Request $request): JsonResponse
     {
-        $userId = $request->attributes->get('user');
+        $userId = $request->attributes->get('user_id');
         
         if (!$userId) {
             return new JsonResponse(['status' => 'USER_ID_NOT_FOUND', 'error' => 'User ID not found'], Response::HTTP_BAD_REQUEST);

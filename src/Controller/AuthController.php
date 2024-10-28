@@ -109,4 +109,18 @@ class AuthController extends AbstractController
             return new JsonResponse(['status' => 'INTERNAL_ERROR', 'error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    #[Route('/logout', name: 'app_auth_logout', methods: ['POST'])]
+    public function logout(Request $request): JsonResponse
+    {
+        $userId = $request->attributes->get('user_id');
+
+        if (!$userId) {
+            return new JsonResponse(['status' => 'USER_ID_NOT_FOUND', 'error' => 'User ID not found'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $user = $this->entityManager->getRepository(User::class)->find($userId);
+
+        return new JsonResponse(['status' => 'SUCCESS', 'message' => 'Logout successful'], Response::HTTP_OK);
+    }
 }
