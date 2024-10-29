@@ -56,7 +56,7 @@ class NoteController extends AbstractController
         return new JsonResponse(['status' => 'SUCCESS', 'note' => $note->toArray()], Response::HTTP_CREATED);
     }
 
-    #[Route('s', name: 'app_note_get', methods: ['GET'])]
+    #[Route('s', name: 'app_notes_get', methods: ['GET'])]
     public function getNotes(Request $request): JsonResponse
     {
         $userId = $request->attributes->get('user_id');
