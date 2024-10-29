@@ -110,7 +110,7 @@ class Note
         return $this->updatedAt;
     }
 
-    private function setUpdatedAt(): void
+    public function setUpdatedAt(): void
     {
         $this->updatedAt = new \DateTime();
     }
