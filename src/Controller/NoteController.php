@@ -83,4 +83,31 @@ class NoteController extends AbstractController
 
         return new JsonResponse(['status' => 'SUCCESS', 'notes' => $notesArray], Response::HTTP_OK);
     }
+
+    #[Route('/{id}', name: 'app_note_get', methods: ['GET'])]
+    public function getNote(Request $request): JsonResponse
+    {
+        $userId = $request->attributes->get('user_id');
+        $noteId = $request->attributes->get('id');
+
+        if (!$userId) {
+            return new JsonResponse(['status' => 'USER_ID_NOT_FOUND', 'error' => 'User ID not found'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!$noteId) {
+            return new JsonResponse(['status' => 'NOTE_ID_NOT_FOUND', 'error' => 'Note ID not found'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $note = $this->entityManager->getRepository(Note::class)->find($noteId);
+
+        if (!$note) {
+            return new JsonResponse(['status' => 'NOTE_NOT_FOUND', 'error' => 'Note not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($note->getOwner()->getId() !== $userId) {
+            return new JsonResponse(['status' => 'FORBIDDEN', 'error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
+        return new JsonResponse(['status' => 'SUCCESS', 'note' => $note->toArray()], Response::HTTP_OK);
+    }
 }
