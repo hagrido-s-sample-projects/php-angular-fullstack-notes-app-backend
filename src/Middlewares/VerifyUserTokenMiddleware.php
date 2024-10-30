@@ -56,6 +56,11 @@ class VerifyUserTokenMiddleware implements EventSubscriberInterface
 
     private function isPublicRoute($controller): bool
     {
+        $request = $this->requestStack->getCurrentRequest();
+        if ($request && $request->getPathInfo() === '/api/docs') {
+            return true;
+        }
+
         if (!$controller) {
             return false;
         }
