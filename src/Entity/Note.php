@@ -112,7 +112,7 @@ class Note
 
     public function setUpdatedAt(): void
     {
-        $this->updatedAt = new \DateTime();
+        $this->updatedAt = new \DateTime('now', new \DateTimeZone('UTC'));
     }
 
     public function trashNote(): JsonResponse
