@@ -77,9 +77,7 @@ class NoteController extends AbstractController
             return new JsonResponse(['status' => 'SUCCESS', 'notes' => []], Response::HTTP_OK);
         }
 
-        $notesArray = $notes->map(function(Note $note) {
-            return $note->toArray();
-        })->toArray();
+        $notesArray = $notes->map(fn(Note $note) => $note->toArray())->toArray();
 
         return new JsonResponse(['status' => 'SUCCESS', 'notes' => $notesArray], Response::HTTP_OK);
     }
