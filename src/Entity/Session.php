@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
 use App\Repository\SessionRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -11,28 +12,38 @@ use App\Enum\TokenType;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: SessionRepository::class)]
+#[ApiResource]
 class Session
 {
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    private ?int $id = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'sessions')]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false)]
+    private ?User $user = null;
+
+    #[ORM\OneToMany(mappedBy: 'session', targetEntity: Token::class, cascade: ['persist'])]
+    private Collection $tokens;
+
+    #[ORM\Column(type: 'boolean', nullable: false)]
+    private bool $isRevoked = false;
+
+    #[ORM\Column(type: 'datetime', nullable: false)]
+    private \DateTime $createdAt;
+
     public function __construct()
     {
         $this->isRevoked = false;
         $this->createdAt = new \DateTime();
         $this->tokens = new ArrayCollection();
     }
-    
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
 
     public function getId(): ?int
     {
         return $this->id;
     }
-
-    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'sessions')]
-    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', nullable: false)]
-    private ?User $user = null;
 
     public function getUser(): ?User
     {
@@ -44,9 +55,6 @@ class Session
         $this->user = $user;
         return $this;
     }
-
-    #[ORM\OneToMany(mappedBy: 'session', targetEntity: Token::class, cascade: ['persist'])]
-    private Collection $tokens;
 
     public function getTokens(): Collection
     {
@@ -96,9 +104,6 @@ class Session
         }
     }
 
-    #[ORM\Column(type: 'boolean', nullable: false)]
-    private bool $isRevoked = false;
-
     public function isRevoked(): bool
     {
         return $this->isRevoked;
@@ -112,9 +117,6 @@ class Session
         }
         return $this;
     }
-
-    #[ORM\Column(type: 'datetime', nullable: false)]
-    private \DateTime $createdAt;
 
     public function getCreatedAt(): ?\DateTime
     {

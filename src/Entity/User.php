@@ -13,11 +13,34 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use App\Entity\Session;
 use App\Entity\Note;
 
-#[ApiResource]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
+#[ApiResource]
 class User implements PasswordAuthenticatedUserInterface
 {
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    private ?int $id = null;
+
+    #[ORM\Column(length: 255, nullable: false, unique: true, type: 'string')]
+    private string $email;
+
+    #[ORM\Column(length: 255, nullable: false, unique: true, type: 'string')]
+    private string $username;
+
+    #[ORM\Column(length: 255, nullable: false, type: 'string')]
+    private string $password;
+
+    #[ORM\Column(type: 'datetime', nullable: false)]
+    private \DateTime $createdAt;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Session::class)]
+    private Collection $sessions;
+
+    #[ORM\OneToMany(mappedBy: 'owner', targetEntity: Note::class)]
+    private Collection $notes;
+
     public function __construct()
     {
         $this->createdAt = new \DateTime();
@@ -25,18 +48,10 @@ class User implements PasswordAuthenticatedUserInterface
         $this->notes = new ArrayCollection();
     }
 
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
-
     public function getId(): ?int
     {
         return $this->id;
     }
-
-    #[ORM\Column(length: 255, nullable: false, unique: true, type: 'string')]
-    private string $email;
 
     public function getEmail(): ?string
     {
@@ -49,9 +64,6 @@ class User implements PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    #[ORM\Column(length: 255, nullable: false, unique: true, type: 'string')]
-    private string $username;
-
     public function getUsername(): ?string
     {
         return $this->username;
@@ -62,9 +74,6 @@ class User implements PasswordAuthenticatedUserInterface
         $this->username = $username;
         return $this;
     }
-
-    #[ORM\Column(length: 255, nullable: false, type: 'string')]
-    private string $password;
 
     public function getPassword(): ?string
     {
@@ -77,16 +86,16 @@ class User implements PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    #[ORM\Column(type: 'datetime', nullable: false)]
-    private \DateTime $createdAt;
-
     public function getCreatedAt(): ?\DateTime
     {
         return $this->createdAt;
     }
 
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Session::class)]
-    private Collection $sessions;
+    public function setCreatedAt(\DateTime $createdAt): self
+    {
+        $this->createdAt = $createdAt;
+        return $this;
+    }
 
     /**
      * @return Collection<int, Session>
@@ -94,12 +103,6 @@ class User implements PasswordAuthenticatedUserInterface
     public function getSessions(): Collection
     {
         return $this->sessions;
-    }
-
-    public function setCreatedAt(\DateTime $createdAt): self
-    {
-        $this->createdAt = $createdAt;
-        return $this;
     }
 
     public function addSession(Session $session): self
@@ -123,9 +126,6 @@ class User implements PasswordAuthenticatedUserInterface
 
         return $this;
     }
-
-    #[ORM\OneToMany(mappedBy: 'owner', targetEntity: Note::class)]
-    private Collection $notes;
 
     /**
      * @return Collection<int, Note>

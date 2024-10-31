@@ -76,4 +76,15 @@ class Token
     {
         return $this->session;
     }
+
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'token' => $this->getToken(),
+            'type' => $this->getType(),
+            'createdAt' => $this->getCreatedAt()->format('Y-m-d H:i:s'),
+            'isRevoked' => $this->isRevoked(),
+        ];
+    }
 }
