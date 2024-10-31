@@ -127,12 +127,25 @@ class User implements PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @return Collection<int, Note>
-     */
     public function getNotes(): Collection
     {
-        return $this->notes;
+        return $this->notes->filter(function($note) {
+            return $note->getState() === NoteState::NORMAL;
+        });
+    }
+
+    public function getArchivedNotes(): Collection
+    {
+        return $this->notes->filter(function($note) {
+            return $note->getState() === NoteState::ARCHIVED;
+        });
+    }
+
+    public function getTrashedNotes(): Collection
+    {
+        return $this->notes->filter(function($note) {
+            return $note->getState() === NoteState::TRASHED;
+        });
     }
 
     public function addNote(Note $note): self
